@@ -1,7 +1,7 @@
 # alfa-task
 
 Для запуска необходимо:
-1. Скачать LLM в корень проекта по этой ссылке(https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/tree/main)
+1. Скачать LLM в корень проекта по этой [ссылке]([https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/tree/main](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/blob/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf))
 2. Добавить в корень проекта env файл c содержимым TELEGRAM_BOT_TOKEN="<ваш токен бота>"
 3. Запустить файл bot.py
 
