@@ -27,7 +27,7 @@ class AlfaTaskTelegramBot:
             lora_path=path_to_lora_adapter
         )
         self.langchain_wrapper = LangChainWrapper(self.llama_cpp.model)
-        self.langchain_wrapper.embed_file(filename)
+        self.langchain_wrapper.get_embeddings(filename)
         self.is_thinking = threading.Event()
         self.is_thinking.clear()
 

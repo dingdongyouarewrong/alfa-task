@@ -1,10 +1,10 @@
 from langchain import PromptTemplate, LLMChain
-from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores.chroma import Chroma
 
-from constants import PROMPT_TEMPLATE_STRING, EMBEDDER_MODEL_NAME
+from constants import PROMPT_TEMPLATE_STRING, EMBEDDER_MODEL_NAME, CHROMA_PATH
 
 
 class LangChainWrapper:
@@ -15,27 +15,29 @@ class LangChainWrapper:
         self.llm_chain = LLMChain(prompt=self.prompt, llm=model)
         self.db = None
 
-    def embed_file(self, file_path, embeddings_folder_path="faiss_alfa_embeddings", save_embeddings=True,
-                   load_embeddings_from_file=False):
-        # Load unstructured file (such as a PDF) and extract documents
-        loader = UnstructuredFileLoader(file_path)
-        documents = loader.load()
-        # Split the text into smaller chunks for processing
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
-        docs = text_splitter.split_documents(documents)
+    def get_embeddings(self, file_path=None, embeddings_folder_path=CHROMA_PATH, save_embeddings=True,
+                       load_embeddings_from_file=False):
+        embedder = HuggingFaceEmbeddings(model_name=EMBEDDER_MODEL_NAME)
 
-        # Initialize the HuggingFaceEmbeddings model for generating document embeddings
-        embeddings = HuggingFaceEmbeddings(model_name=EMBEDDER_MODEL_NAME)
+        if not load_embeddings_from_file:
+            # Load unstructured file (such as a PDF) and extract documents
+            loader = UnstructuredFileLoader(file_path)
+            documents = loader.load()
+            # Split the text into smaller chunks for processing
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
+            docs = text_splitter.split_documents(documents)
 
-        # Create a FAISS index and store the document embeddings
-        self.db = FAISS.from_documents(docs, embeddings)
+            # Initialize the HuggingFaceEmbeddings model for generating document embeddings
 
-        if save_embeddings:
-            # Save the document embeddings to a local folder
-            self.db.save_local(embeddings_folder_path)
-        if load_embeddings_from_file:
+            # Create a FAISS index and store the document embeddings
+            self.db = Chroma.from_documents(docs, embedder)
+
+            if save_embeddings:
+                # Save the document embeddings to a local folder
+                self.db.persist()
+        else:
             # Load the document embeddings from a local folder
-            self.db = FAISS.load_local(embeddings_folder_path, embeddings=embeddings)
+            self.db = Chroma(persist_directory=embeddings_folder_path, embedding_function=embedder)
 
     def get_answer(self, question):
         # Perform a similarity search using the question and the document embeddings
